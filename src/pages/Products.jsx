@@ -13,29 +13,57 @@ function Products() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [skip,setSkip] = useState(0);
+  const [more,setMore] = useState(true)
+  const limit = 30;
 
-  useEffect(() => {
+ 
     async function getData() {
       try {
-        const productData = await fetchJson("/products");
-        const categoryData = await fetchJson("/products/categories");
+        setIsLoading(true);
+        const productData = await fetchJson(
+         `/products?limit=${limit}&skip=${skip}`
+        );
 
-        setProducts(productData.products);
+        setProducts((prevProducts) => {
+          const existingIds = new Set(prevProducts.map((p) => p.id));
+
+         const newProducts = productData.products.filter(
+        (product) => !existingIds.has(product.id)
+      );
+        return[...prevProducts,...newProducts]
+      });
+      
         setTotal(productData.total);
-        setCategories(categoryData);
+         setSkip(skip + productData.products.length);
+        setMore(skip + productData.products.length < productData.total);
+
       } catch (err) {
         setError(err.message);
       } finally {
         setIsLoading(false);
       }
+
+}
+   useEffect(() => {
+    async function getInitialData() {
+      try {
+        const categoryData = await fetchJson("/products/categories");
+        setCategories(categoryData);
+
+        await getData();
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+      }
     }
 
-    getData();
+    getInitialData();
   }, []);
 
-  if (isLoading) return <Loading />;
+  if (isLoading && products.length === 0) return <Loading />;
   if (error) return <ErrorMessage message={error} />;
-
+  
   return (
     <section>
       <h1 className="page-title">Alla produkter</h1>
@@ -58,6 +86,12 @@ function Products() {
       </div>
 
       <ProductGrid products={products} />
+      
+      {more && (
+      <button className={styles.btn} onClick={getData} disabled={isLoading}> 
+            {isLoading ? "laddar ..." : "Visa fler "}
+            </button>
+          )}
     </section>
   );
 }
