@@ -25,3 +25,9 @@
 .categories {
   margin-bottom: 32px;
 }
+.btn {
+  width: auto;
+  height: auto;
+  background-color: white;
+  color: rgb(13, 2, 47);
+}
