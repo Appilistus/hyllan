@@ -4,28 +4,47 @@ import { fetchJson } from "../api.js";
 import { formatPrice } from "../utils/formatPrice.js";
 import ProductGrid from "../components/ProductGrid.jsx";
 import Loading from "../components/Loading.jsx";
+import ErrorMessage from "../components/ErrorMessage.jsx";
 import styles from "./ProductDetail.module.css";
 
 function ProductDetail({ addToCart }) {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [similar, setSimilar] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function getProduct() {
-      const data = await fetchJson(`/products/${id}`);
-      setProduct(data);
+      try {
+        setProduct(null);
+        setError(null);
+        const data = await fetchJson(`/products/${id}`);
+        setProduct(data);
 
-      // Hämta några andra produkter i samma kategori
-      const similarData = await fetchJson(
-        `/products/category/${data.category}?limit=5`
-      );
-      const others = similarData.products.filter((p) => p.id !== data.id);
-      setSimilar(others.slice(0, 4));
+        // Hämta några andra produkter i samma kategori
+        const similarData = await fetchJson(
+          `/products/category/${data.category}?limit=5`
+        );
+        const others = similarData.products.filter((p) => p.id !== data.id);
+        setSimilar(others.slice(0, 4));
+      } catch (err) {
+        setError(err.message);
+      }
     }
 
     getProduct();
-  }, []);
+  }, [id]);
+
+  if (error) {
+    return (
+      <>
+        <ErrorMessage message="Produkten kunde inte hittas." />
+        <Link to="/products" className={styles.back}>
+          ← Tillbaka till produkter
+        </Link>
+      </>
+    );
+  }
 
   if (!product) return <Loading />;
 
