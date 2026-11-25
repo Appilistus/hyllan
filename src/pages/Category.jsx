@@ -11,6 +11,11 @@ function Category() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const categoryName = slug
+  .split("")
+  .map(word => word.charAt(0).toUpperCase()+ word.slice(1))
+  .join("");
+
   useEffect(() => {
     async function getProducts() {
       setIsLoading(true);
@@ -35,8 +40,8 @@ function Category() {
   return (
     <section>
       <Link to="/products">← Alla produkter</Link>
-      <h1 className="page-title">{slug}</h1>
-      <p>{products.length} produkter i kategorin</p>
+      <h1 className="page-title"> {categoryName}</h1>
+      <p>{products.length} Produkter i kategorin</p>
       <ProductGrid products={products} />
     </section>
   );
